@@ -1,12 +1,11 @@
 import Link from 'next/link';
-import { Eye, Trash2, Pen, Play, Pause, Cog, X } from 'lucide-react';
+import { Cog, X, Eye, Trash2, Pen, Play, Pause, ChartSpline } from 'lucide-react';
 import { Button } from '@headlessui/react';
 import { openConfirm } from '@/components/ConfirmModal';
 import { Job } from '@prisma/client';
-import { startJob, stopJob, deleteJob, getAvaliableJobActions, markJobAsStopped } from '@/utils/jobs';
 import { startQueue } from '@/utils/queue';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
-import { redirect } from 'next/navigation';
+import { startJob, stopJob, deleteJob, getAvaliableJobActions, openTensorboard, markJobAsStopped } from '@/utils/jobs';
 
 interface JobActionBarProps {
   job: Job;
@@ -25,12 +24,22 @@ export default function JobActionBar({
   hideView,
   autoStartQueue = false,
 }: JobActionBarProps) {
-  const { canStart, canStop, canDelete, canEdit, canRemoveFromQueue } = getAvaliableJobActions(job);
+  const { canStart, canStop, canDelete, canEdit, canRemoveFromQueue, canUseTensorboard } = getAvaliableJobActions(job);
 
   if (!afterDelete) afterDelete = onRefresh;
 
   return (
     <div className={`${className}`}>
+      {canUseTensorboard && (
+        <Button
+          className="ml-2 text-gray-200 hover:text-gray-100 inline-block"
+          onClick={async () => {
+            await openTensorboard(job);
+          }}
+        >
+          <ChartSpline />
+        </Button>
+      )}
       {canStart && (
         <Button
           onClick={async () => {

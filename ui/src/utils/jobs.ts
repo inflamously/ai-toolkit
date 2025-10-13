@@ -73,6 +73,8 @@ export const getJobConfig = (job: Job) => {
 export const getAvaliableJobActions = (job: Job) => {
   const jobConfig = getJobConfig(job);
   const isStopping = job.stop && job.status === 'running';
+  const logDir = getJobConfig(job).config.process[0].log_dir;
+  const canUseTensorboard = logDir ? logDir.length > 0 : false;
   const canDelete = ['queued', 'completed', 'stopped', 'error'].includes(job.status) && !isStopping;
   const canEdit = ['queued','completed', 'stopped', 'error'].includes(job.status) && !isStopping;
   const canRemoveFromQueue = job.status === 'queued';
@@ -82,7 +84,7 @@ export const getAvaliableJobActions = (job: Job) => {
   if (job.status === 'completed' && jobConfig.config.process[0].train.steps > job.step && !isStopping) {
     canStart = true;
   }
-  return { canDelete, canEdit, canStop, canStart, canRemoveFromQueue };
+  return { canDelete, canEdit, canStop, canStart, canUseTensorboard, canRemoveFromQueue };
 };
 
 export const getNumberOfSamples = (job: Job) => {
@@ -93,4 +95,13 @@ export const getNumberOfSamples = (job: Job) => {
 export const getTotalSteps = (job: Job) => {
   const jobConfig = getJobConfig(job);
   return jobConfig.config.process[0].train.steps;
+};
+
+export const openTensorboard = (job: Job) => {
+  return new Promise<string>((resolve, reject) => {
+    apiClient.post(`/api/jobs/${job.id}/tensorboard`).catch(error => {
+      console.error('Error deleting job:', error);
+      reject(error);
+    });
+  });
 };

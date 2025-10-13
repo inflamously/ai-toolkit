@@ -219,6 +219,7 @@ export interface ProcessConfig {
   train: TrainConfig;
   model: ModelConfig;
   sample: SampleConfig;
+  log_dir?: string;
 }
 
 export interface ConfigObject {
