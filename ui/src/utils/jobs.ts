@@ -98,9 +98,9 @@ export const getTotalSteps = (job: Job) => {
 };
 
 export const openTensorboard = (job: Job) => {
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<string>((_, reject) => {
     apiClient.post(`/api/jobs/${job.id}/tensorboard`).catch(error => {
-      console.error('Error deleting job:', error);
+      console.error('Error opening tensorboard for job:', error);
       reject(error);
     });
   });

@@ -4,6 +4,7 @@ import { TOOLKIT_ROOT } from '@/paths';
 import { spawn } from 'child_process';
 import { isWindows, getPythonPath } from '@/app/api/jobs/platform-utils';
 import { JobConfig } from '@/types';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -18,22 +19,39 @@ function getLogDir(job: Job) {
     return null;
   }
 
-  return path.join(TOOLKIT_ROOT, logDir, `${jobName}_`);
+  return path.join(TOOLKIT_ROOT, logDir, `${jobName}_${0}`);
 }
 
-export async function POST(request: NextRequest, { params }: { params: { jobID: string } }) {
+export async function POST(_: NextRequest, { params }: { params: { jobID: string } }) {
   const { jobID } = await params;
 
-  const job = await prisma.job.findUnique({
+  const job: Job | null = await prisma.job.findUnique({
     where: { id: jobID },
   });
 
+  if (!job) {
+    return NextResponse.json(
+      {
+        error: 'Failed to launch tensorboard',
+        details: `Job for jobID ${jobID} not found`,
+      },
+      { status: 404 },
+    );
+  }
+
   const logDir = getLogDir(job);
+  if (!logDir) {
+    return NextResponse.json(
+      {
+        error: 'Failed to launch tensorboard',
+        details: 'Log directory does not exist',
+      },
+      { status: 404 },
+    );
+  }
 
   const additionalEnv: any = {};
-
   const args = ['-m', 'tensorboard', '--logdir', logDir, '--port', '6006'];
-
   const pythonPath = getPythonPath();
 
   try {
